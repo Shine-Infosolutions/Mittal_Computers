@@ -80,10 +80,8 @@ const EditProduct = () => {
 
   const fetchProduct = async () => {
     try {
-      const response = await axios.get('https://computer-b.vercel.app/api/products/all')
-      const productsArray = Array.isArray(response.data) ? response.data : 
-                           (response.data?.products || response.data?.data || [])
-      const product = productsArray.find(p => p._id === id)
+      const response = await axios.get(`https://computer-b.vercel.app/api/products/get/${id}`)
+      const product = response.data.data || response.data
       
       if (!product) {
         toast.error('Product not found')

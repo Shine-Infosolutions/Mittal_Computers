@@ -42,8 +42,8 @@ const Product = () => {
         // Only category - use dedicated category API
         url = `https://computer-b.vercel.app/api/products/category/${selectedCategory}`
       } else {
-        // No filters
-        url = 'https://computer-b.vercel.app/api/products/all'
+        // No filters - add pagination
+        url = `https://computer-b.vercel.app/api/products/all?page=${page}&limit=20`
       }
       
       console.log('Fetching products with URL:', url)
@@ -52,15 +52,26 @@ const Product = () => {
       
       // Handle different response structures
       let productsArray = []
+      let paginationMeta = null
+      
       if (Array.isArray(response.data)) {
         productsArray = response.data
       } else if (response.data && Array.isArray(response.data.products)) {
         productsArray = response.data.products
+        paginationMeta = response.data.meta
       } else if (response.data && Array.isArray(response.data.data)) {
         productsArray = response.data.data
+        paginationMeta = response.data.meta
       } else {
         console.log('Unexpected response structure:', response.data)
         productsArray = []
+      }
+      
+      // Update pagination info
+      if (paginationMeta) {
+        setTotalPages(paginationMeta.totalPages || 1)
+      } else {
+        setTotalPages(1)
       }
       
       // If both search and category, apply client-side category filter
