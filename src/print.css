@@ -1,0 +1,65 @@
+@media print {
+  .sidebar {
+    display: none !important;
+  }
+  
+  .ml-64, .ml-60, .ml-16 {
+    margin-left: 0 !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .no-print * {
+    display: none !important;
+  }
+  
+  button {
+    display: none !important;
+  }
+  
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .bg-gray-50 {
+    background-color: #f9fafb !important;
+  }
+  
+  .bg-blue-900 {
+    background-color: #1e3a8a !important;
+  }
+  
+  .text-white {
+    color: white !important;
+  }
+  
+  .border-gray-300 {
+    border-color: #d1d5db !important;
+  }
+  
+  .text-green-600 {
+    color: #059669 !important;
+  }
+  
+  .text-gray-800 {
+    color: #1f2937 !important;
+  }
+  
+  .text-gray-600 {
+    color: #4b5563 !important;
+  }
+  
+  .text-gray-500 {
+    color: #6b7280 !important;
+  }
+}
