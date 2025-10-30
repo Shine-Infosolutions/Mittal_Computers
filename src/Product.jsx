@@ -262,22 +262,7 @@ const Product = () => {
                 </option>
               ))}
             </select>
-            <select
-              value={selectedSubcategory}
-              onChange={(e) => {
-                setSelectedSubcategory(e.target.value)
-                setCurrentPage(1)
-              }}
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 shadow-sm w-full sm:w-auto"
-              disabled={!selectedCategory}
-            >
-              <option value="">All Subcategories</option>
-              {filteredSubcategories.map(subcategory => (
-                <option key={subcategory._id} value={subcategory._id}>
-                  {subcategory.name}
-                </option>
-              ))}
-            </select>
+
           </div>
           <div className="text-sm text-gray-500 w-full lg:w-auto text-left lg:text-right">
             {products.length} products found
@@ -380,7 +365,6 @@ const Product = () => {
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Product</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Subcategory</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Brand</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Price</th>
                 <th className="px-6 py-4 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Stock</th>
@@ -418,11 +402,6 @@ const Product = () => {
                   <td className="px-6 py-4">
                     <span className="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
                       {product.category?.name || 'Uncategorized'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
-                      {subcategories.find(sub => sub.category?._id === product.category?._id)?.name || 'None'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{product.brand || 'N/A'}</td>
