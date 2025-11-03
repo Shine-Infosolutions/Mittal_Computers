@@ -10,7 +10,9 @@ const Product = () => {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [editId, setEditId] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -21,6 +23,7 @@ const Product = () => {
   useEffect(() => {
     fetchProducts(1)
     fetchCategories()
+    fetchSubcategories()
   }, [])
 
 
@@ -32,12 +35,15 @@ const Product = () => {
       let url
       
       // Determine which API to use based on filters
-      if (searchTerm.trim() && selectedCategory) {
-        // Both search and category - use search API with category parameter as fallback
+      if (searchTerm.trim() && (selectedCategory || selectedSubcategory)) {
+        // Search with category/subcategory filter
         url = `https://computer-b.vercel.app/api/products/search?q=${encodeURIComponent(searchTerm)}`
       } else if (searchTerm.trim()) {
         // Only search
         url = `https://computer-b.vercel.app/api/products/search?q=${encodeURIComponent(searchTerm)}`
+      } else if (selectedSubcategory) {
+        // Only subcategory - use subcategory API
+        url = `https://computer-b.vercel.app/api/subcategories/${selectedSubcategory}`
       } else if (selectedCategory) {
         // Only category - use dedicated category API
         url = `https://computer-b.vercel.app/api/products/category/${selectedCategory}`
@@ -74,10 +80,15 @@ const Product = () => {
         setTotalPages(1)
       }
       
-      // If both search and category, apply client-side category filter
-      if (searchTerm.trim() && selectedCategory && productsArray.length > 0) {
-        productsArray = productsArray.filter(product => product.category?._id === selectedCategory)
-        console.log('Applied client-side category filtering for combined search+category')
+      // Apply client-side filters for combined search
+      if (searchTerm.trim() && productsArray.length > 0) {
+        if (selectedSubcategory) {
+          productsArray = productsArray.filter(product => product.subcategory?._id === selectedSubcategory)
+          console.log('Applied client-side subcategory filtering for combined search+subcategory')
+        } else if (selectedCategory) {
+          productsArray = productsArray.filter(product => product.category?._id === selectedCategory)
+          console.log('Applied client-side category filtering for combined search+category')
+        }
       }
       
       console.log('Final products array:', productsArray)
@@ -116,6 +127,20 @@ const Product = () => {
       setCategories([])
     }
   }
+
+  const fetchSubcategories = async () => {
+    try {
+      const response = await axios.get('https://computer-b.vercel.app/api/subcategories')
+      const data = Array.isArray(response.data) ? response.data : 
+                   (response.data?.subcategories || response.data?.data || [])
+      setSubcategories(data)
+    } catch (error) {
+      console.error('Error fetching subcategories:', error)
+      setSubcategories([])
+    }
+  }
+
+
 
   const handleEdit = (product) => {
     // Navigate to edit page with product ID
@@ -167,7 +192,12 @@ const Product = () => {
       fetchProducts(1)
     }, 500)
     return () => clearTimeout(delayedSearch)
-  }, [searchTerm, selectedCategory])
+  }, [searchTerm, selectedCategory, selectedSubcategory])
+
+  // Filter subcategories based on selected category
+  const filteredSubcategories = selectedCategory 
+    ? subcategories.filter(sub => sub.category?._id === selectedCategory || sub.category === selectedCategory)
+    : subcategories
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -220,6 +250,7 @@ const Product = () => {
               value={selectedCategory}
               onChange={(e) => {
                 setSelectedCategory(e.target.value)
+                setSelectedSubcategory('') // Reset subcategory when category changes
                 setCurrentPage(1)
               }}
               className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 shadow-sm w-full sm:w-auto"
@@ -231,6 +262,7 @@ const Product = () => {
                 </option>
               ))}
             </select>
+
           </div>
           <div className="text-sm text-gray-500 w-full lg:w-auto text-left lg:text-right">
             {products.length} products found
@@ -273,8 +305,12 @@ const Product = () => {
             <div className="grid grid-cols-2 gap-3 mb-3 text-sm">
               <div>
                 <span className="text-gray-500">Category:</span>
-                <p className="font-medium">{product.category?.name || 'N/A'}</p>
+                <p className="font-medium">{(() => {
+                  const subcategory = subcategories.find(sub => sub._id === product.category?._id)
+                  return subcategory ? subcategory.category?.name : product.category?.name || 'N/A'
+                })()}</p>
               </div>
+
               <div>
                 <span className="text-gray-500">Brand:</span>
                 <p className="font-medium">{product.brand || 'N/A'}</p>

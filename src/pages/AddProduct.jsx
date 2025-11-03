@@ -8,11 +8,14 @@ const AddProduct = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
+
   const [categoryAttributes, setCategoryAttributes] = useState([])
   const [backendAttributes, setBackendAttributes] = useState([])
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    subcategory: '',
     brand: '',
     modelNumber: '',
     quantity: 0,
@@ -36,6 +39,7 @@ const AddProduct = () => {
 
   useEffect(() => {
     fetchCategories()
+    fetchSubcategories()
     
     // Check if we have product data from bulk import
     if (location.state?.productData) {
@@ -43,6 +47,7 @@ const AddProduct = () => {
       setFormData({
         name: productData.name || '',
         category: productData.category || '',
+        subcategory: productData.subcategory || '',
         brand: productData.brand || '',
         modelNumber: productData.modelNumber || '',
         quantity: productData.quantity || 0,
@@ -66,6 +71,20 @@ const AddProduct = () => {
       setCategories([])
     }
   }
+
+  const fetchSubcategories = async () => {
+    try {
+      const response = await axios.get('https://computer-b.vercel.app/api/subcategories')
+      const data = Array.isArray(response.data) ? response.data : 
+                   (response.data?.subcategories || response.data?.data || [])
+      setSubcategories(data)
+    } catch (error) {
+      console.error('Error fetching subcategories:', error)
+      setSubcategories([])
+    }
+  }
+
+
 
   const fetchCategoryAttributes = async (categoryId) => {
     try {
@@ -93,7 +112,7 @@ const AddProduct = () => {
 
   const handleCategoryChange = (categoryId) => {
     console.log('Category changed to:', categoryId)
-    setFormData({ ...formData, category: categoryId, attributes: {} })
+    setFormData({ ...formData, category: categoryId, subcategory: '', attributes: {} })
     setBackendAttributes([])
     if (categoryId) {
       fetchCategoryAttributes(categoryId)
@@ -103,8 +122,14 @@ const AddProduct = () => {
     setNewAttribute({ key: '', value: '' })
   }
 
+  // Filter subcategories based on selected category
+  const filteredSubcategories = formData.category 
+    ? subcategories.filter(sub => sub.category?._id === formData.category || sub.category === formData.category)
+    : []
+
   const handleSubmit = async (e) => {
     e.preventDefault()
+    console.log('Form data being sent:', formData)
     try {
       await axios.post('https://computer-b.vercel.app/api/products/create', formData)
       toast.success('Product created successfully!')
@@ -725,6 +750,21 @@ Use "N/A" only if truly not found`
               <option value="">Select Category</option>
               {categories.map(cat => (
                 <option key={cat._id} value={cat._id}>{cat.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Subcategory</label>
+            <select
+              value={formData.subcategory}
+              onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+              disabled={!formData.category}
+            >
+              <option value="">Select Subcategory (Optional)</option>
+              {filteredSubcategories.map(sub => (
+                <option key={sub._id} value={sub._id}>{sub.name}</option>
               ))}
             </select>
           </div>
