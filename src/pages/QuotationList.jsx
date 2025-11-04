@@ -13,6 +13,8 @@ const QuotationList = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [quotationToDelete, setQuotationToDelete] = useState(null)
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [filteredQuotations, setFilteredQuotations] = useState([])
 
 
   useEffect(() => {
@@ -46,7 +48,20 @@ const QuotationList = () => {
   const handleSearch = (e) => {
     const value = e.target.value
     setSearchTerm(value)
-    fetchQuotations(value)
+    
+    if (value.trim()) {
+      const filtered = quotations.filter(quotation => 
+        quotation.customerName?.toLowerCase().includes(value.toLowerCase()) ||
+        quotation.customerEmail?.toLowerCase().includes(value.toLowerCase()) ||
+        quotation.quoteId?.toLowerCase().includes(value.toLowerCase()) ||
+        quotation._id?.slice(-6).toLowerCase().includes(value.toLowerCase())
+      )
+      setFilteredQuotations(filtered)
+      setShowDropdown(true)
+    } else {
+      setShowDropdown(false)
+      setFilteredQuotations([])
+    }
   }
 
   const handleDeleteQuotation = async () => {
@@ -167,16 +182,49 @@ const QuotationList = () => {
         </div>
         
         <div className="mt-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <input
-            type="text"
-            placeholder="Search quotations by customer name, email, or quote ID..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value)
-              fetchQuotations(e.target.value)
-            }}
-            className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 shadow-sm w-full lg:w-96"
-          />
+          <div className="relative w-full lg:w-96">
+            <input
+              type="text"
+              placeholder="Search quotations by customer name, email, or quote ID..."
+              value={searchTerm}
+              onChange={handleSearch}
+              onFocus={() => searchTerm && setShowDropdown(true)}
+              onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+              className="px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-gray-400 shadow-sm w-full"
+            />
+            {showDropdown && filteredQuotations.length > 0 && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto mt-1">
+                {filteredQuotations.slice(0, 5).map((quotation) => (
+                  <div
+                    key={quotation._id}
+                    onClick={() => {
+                      setSearchTerm('')
+                      setShowDropdown(false)
+                      navigate(`/view-pdf/${quotation._id}`)
+                    }}
+                    className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-medium text-gray-900">{quotation.quoteId || `#QT-${quotation._id?.slice(-6)}`}</p>
+                        <p className="text-sm text-gray-600">{quotation.customerName}</p>
+                        <p className="text-xs text-gray-500">{quotation.customerEmail}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-gray-900">{formatIndianCurrency(quotation.totalAmount || 0)}</p>
+                        <p className="text-xs text-gray-500">{new Date(quotation.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {filteredQuotations.length > 5 && (
+                  <div className="p-2 text-center text-sm text-gray-500 bg-gray-50">
+                    +{filteredQuotations.length - 5} more results
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-sm text-gray-500 w-full lg:w-auto text-left lg:text-right">
             {quotations.length} quotations found
           </div>
